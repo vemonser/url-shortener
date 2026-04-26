@@ -1,0 +1,83 @@
+# ==================================================
+# APPLICATION.YML - URL Shortener Configuration
+# ==================================================
+
+app:
+  datasource:
+    # -- PRIMARY DATABASE --------------------------
+    primary:
+      url: jdbc:postgresql://localhost:55432/urldb
+      username: postgres
+      password: 852140
+      driver-class-name: org.postgresql.Driver
+      pool:
+        maximum-pool-size: 10
+        minimum-idle: 2
+        connection-timeout: 2000
+
+    # -- SHARDS ------------------------------------
+    shards:
+      - url: jdbc:postgresql://localhost:5433/shard1db
+        username: postgres
+        password: 852140
+        driver-class-name: org.postgresql.Driver
+        pool:
+          maximum-pool-size: 10
+          minimum-idle: 2
+          connection-timeout: 2000
+
+      - url: jdbc:postgresql://localhost:5434/shard2db
+        username: postgres
+        password: 852140
+        driver-class-name: org.postgresql.Driver
+        pool:
+          maximum-pool-size: 10
+          minimum-idle: 2
+          connection-timeout: 2000
+
+  # -- REDIS ---------------------------------------
+  redis:
+    host: localhost
+    port: 6379
+    ttl-seconds: 3600
+    rate-limit-window: 60
+    rate-limit-max: 30
+
+  # -- SHORTENER LOGIC -----------------------------
+  shortener:
+    code-length: 8
+    pre-gen-count: 100000
+    refill-threshold: 10000
+    base-url: http://localhost:8082
+
+# ==================================================
+# SPRING BUILT-IN CONFIG
+# ==================================================
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss}){faint} %clr(%5p){highlight} %clr([%15.15t]){faint} %clr(%-30logger{0}){cyan} %clr(:){faint} %m%n"
+
+# ==================================================
+# SERVER CONFIG
+# ==================================================
+server:
+  port: 8082

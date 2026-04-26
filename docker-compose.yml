@@ -1,0 +1,86 @@
+services:
+
+  # ══════════════════════════════════════════
+  # PRIMARY DATABASE — keys table
+  # ══════════════════════════════════════════
+  postgres-primary:
+    image: postgres:18
+    container_name: url-primary
+    environment:
+      POSTGRES_DB:       urldb
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: 852140
+    ports:
+      - "55432:5432"
+    volumes:
+      - primary-data:/var/lib/postgresql
+      - ./src/main/resources/schema-primary.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════
+  # SHARD 1 — urls table (even hash)
+  # ══════════════════════════════════════════
+  postgres-shard1:
+    image: postgres:18
+    container_name: url-shard1
+    environment:
+      POSTGRES_DB:       shard1db
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: 852140
+    ports:
+      - "5433:5432"
+    volumes:
+      - shard1-data:/var/lib/postgresql
+      - ./src/main/resources/schema-shard.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════
+  # SHARD 2 — urls table (odd hash)
+  # ══════════════════════════════════════════
+  postgres-shard2:
+    image: postgres:18
+    container_name: url-shard2
+    environment:
+      POSTGRES_DB:       shard2db
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: 852140
+    ports:
+      - "5434:5432"
+    volumes:
+      - shard2-data:/var/lib/postgresql
+      - ./src/main/resources/schema-shard.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ══════════════════════════════════════════
+  # REDIS — cache + rate limiting
+  # ══════════════════════════════════════════
+  redis:
+    image: redis:7
+    container_name: url-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  primary-data:
+  shard1-data:
+  shard2-data:
+  redis-data:
